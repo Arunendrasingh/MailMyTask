@@ -1,0 +1,16 @@
+# Database files
+db.sqlite3
+
+# Python cache 
+__pycache__/
+
+# Django Migrations
+migrations/
+
+# Virtualenvs
+.venv
+
+
+
+
+
