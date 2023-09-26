@@ -11,6 +11,9 @@ migrations/
 .venv
 
 
+# Database config and Env files
+*.cnf
+
 
 
 
