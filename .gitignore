@@ -15,5 +15,9 @@ migrations/
 *.cnf
 
 
+# Vs Code configuration.
+.vscode/
+
+
 
 

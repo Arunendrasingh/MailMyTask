@@ -1,21 +1,6 @@
 from django.db import models
 
-# Create your models here.
 
-
-
-# TODO: Create a model to save the todo items
-
-"""
-title,
-description: Text,
-priority,
-complete_by: Date and Time to Complete,
-send_reminder: Bool,
-reminder_time: Time before to send the notification.
-added_at,
-updated_at,
-"""
 
 class Todo(models.Model):
     title =  models.CharField(max_length=90)
