@@ -19,5 +19,12 @@ migrations/
 .vscode/
 
 
+# Jupyter files
+*.ipynb
+
+*.json
+
+# Pycharm folder
+.idea
 
 
