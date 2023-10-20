@@ -10,7 +10,8 @@ class Todo(models.Model):
     reminder_before_time = models.IntegerField()
     updated_at = models.DateTimeField(auto_now=True)
     created_At = models.DateTimeField(auto_now_add=True)
-    task_priority = models.ForeignKey("TaskPriority", null=True, on_delete=models.SET_NULL)
+    task_priority = models.ForeignKey(
+        "TaskPriority", null=True, on_delete=models.SET_NULL)
 
     def __str__(self) -> str:
         return self.title
@@ -23,6 +24,6 @@ class TaskPriority(models.Model):
 
     def __str__(self) -> str:
         return self.title
-    
+
 
 # TODO: Fix AttributeError: 'datetime.timedelta' object has no attribute 'day' error in Code By Tomorrow.
