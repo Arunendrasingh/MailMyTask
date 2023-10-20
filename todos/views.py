@@ -75,8 +75,6 @@ class GetUpdateDeleteTodo(APIView):
         return Response({"hasError": False, "messages": f"TODO with id: {id} is deleted."}, status=status.HTTP_200_OK)
 
 
-
-
 class ListCreateTaskPriority(APIView):
     def post(self, request):
         # Now add code to get the value from request.
@@ -89,23 +87,24 @@ class ListCreateTaskPriority(APIView):
                 "errors": "",
                 "resultObject": task_priority_serializer.data
             }, status=status.HTTP_201_CREATED)
-        
+
         return Response({
             "hasError": True,
             "errors": task_priority_serializer.errors,
             "resultObject": None
         })
-    
+
     def get(self, request):
         task_priority = TaskPriority.objects.all()
-        task_priority_serializer = TaskPrioritySerializer(task_priority, many=True)
+        task_priority_serializer = TaskPrioritySerializer(
+            task_priority, many=True)
 
         if not task_priority_serializer:
             return Response({
-            "hasError": True,
-            "errors": task_priority_serializer.errors,
-            "resultObject": []
-        })
+                "hasError": True,
+                "errors": task_priority_serializer.errors,
+                "resultObject": []
+            })
 
         return Response({
             "hasError": False,
@@ -144,6 +143,9 @@ class GetUpdateDeleteTaskPriority(APIView):
         todo_to_delete.delete()
 
         return Response({"hasError": False, "messages": f"Task Priority with id: {id} is deleted."}, status=status.HTTP_200_OK)
-    
 
-# Todo: test Update and delete method's priority .d
+
+# TODO: test Update and delete method's priority .d
+
+
+# Creating a new EndPoint to assign priority tag.
