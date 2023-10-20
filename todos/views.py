@@ -2,8 +2,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from todos.serializers import TodoSerializer
-from .models import Todo
+from todos.serializers import TaskPrioritySerializer, TodoSerializer
+from .models import TaskPriority, Todo
 
 # Create your views here.
 
@@ -73,3 +73,77 @@ class GetUpdateDeleteTodo(APIView):
         todo_to_delete.delete()
 
         return Response({"hasError": False, "messages": f"TODO with id: {id} is deleted."}, status=status.HTTP_200_OK)
+
+
+
+
+class ListCreateTaskPriority(APIView):
+    def post(self, request):
+        # Now add code to get the value from request.
+        task_priority_serializer = TaskPrioritySerializer(data=request.data)
+
+        if task_priority_serializer.is_valid(raise_exception=True):
+            task_priority_serializer.save()
+            return Response({
+                "hasError": False,
+                "errors": "",
+                "resultObject": task_priority_serializer.data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response({
+            "hasError": True,
+            "errors": task_priority_serializer.errors,
+            "resultObject": None
+        })
+    
+    def get(self, request):
+        task_priority = TaskPriority.objects.all()
+        task_priority_serializer = TaskPrioritySerializer(task_priority, many=True)
+
+        if not task_priority_serializer:
+            return Response({
+            "hasError": True,
+            "errors": task_priority_serializer.errors,
+            "resultObject": []
+        })
+
+        return Response({
+            "hasError": False,
+            "errors": "",
+            "resultObject": task_priority_serializer.data
+        })
+
+
+class GetUpdateDeleteTaskPriority(APIView):
+    def get(self, request, id):
+        todo = TaskPriority.objects.filter(id=id).first()
+        if not todo:
+            return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = TaskPrioritySerializer(todo)
+        return Response({"hasError": False, "errors": None, "resultObject": serializer.data}, status=status.HTTP_200_OK)
+
+    def put(self, request, id):
+        todo = TaskPriority.objects.filter(id=id).first()
+        if not todo:
+            return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = TaskPrioritySerializer(
+            instance=todo, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"hasError": False, "errors": serializer.errors, "resultObject": serializer.data}, status=status.HTTP_200_OK)
+
+        return Response({"hasError": True, "errors": serializer.errors, "resultObject": {}}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        todo_to_delete = TaskPriority.objects.filter(id=id).first()
+        if not todo_to_delete:
+            return Response({"hasError": True, "errors": f"No TaskPriority to delete with id: {id}", "resultObject": None}, status=status.HTTP_404_NOT_FOUND)
+
+        todo_to_delete.delete()
+
+        return Response({"hasError": False, "messages": f"Task Priority with id: {id} is deleted."}, status=status.HTTP_200_OK)
+    
+
+# Todo: test Update and delete method's priority .d

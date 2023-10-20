@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from todos.models import Todo
+from todos.models import TaskPriority, Todo
 
 from datetime import datetime, timezone
 
@@ -12,8 +12,6 @@ def convert_django_time_in_datetime(str_time: str):
 
 
 class TodoSerializer(serializers.ModelSerializer):
-
-    # We can also create field level validator in ModelSerializer
 
     title = serializers.CharField(validators=[UniqueValidator(
         queryset=Todo.objects.all(), message="Title should be Unique.")])
@@ -54,4 +52,17 @@ class TodoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Todo
+        fields = '__all__'
+
+
+class TaskPrioritySerializer(serializers.ModelSerializer):
+
+    weight = serializers.IntegerField(validators=[UniqueValidator(
+        queryset=TaskPriority.objects.all(), message="Weight should be Unique.")])
+    
+    title = serializers.CharField(validators=[UniqueValidator(
+        queryset=TaskPriority.objects.all(), message="TaskPriority should be unique.")])
+
+    class Meta:
+        model = TaskPriority
         fields = '__all__'
