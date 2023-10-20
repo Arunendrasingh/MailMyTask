@@ -30,7 +30,7 @@ class ListCreateTodo(APIView):
 
         """
         todo_serializer = TodoSerializer(data=request.data)
-        if todo_serializer.is_valid():
+        if todo_serializer.is_valid(raise_exception=True):
             todo_serializer.save()
             return Response(todo_serializer.data, status=status.HTTP_201_CREATED)
         

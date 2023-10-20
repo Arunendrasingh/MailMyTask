@@ -24,15 +24,15 @@ class TodoSerializer(serializers.ModelSerializer):
             # if diff.days == 0 and diff.seconds == 0 : raise validation error to select greater time than current time.
 
             # if diff.days >= 0 and diff.
-            if time_diff.day == 0 and time_diff.seconds == 0:
+            if time_diff.days == 0 and time_diff.seconds == 0:
                 return serializers.ValidationError("Todo time must be greater than current time.")
             
-            if time_diff.day >= 0 and time_diff.seconds >= 0:
+            if time_diff.days >= 0 and time_diff.seconds >= 0:
                 return super().validate(attrs)
             
-            return serializers.ValidationError("Todo time must be greater than current time.")
+            raise serializers.ValidationError("Todo time must be greater than current time.")
         except ValueError:
-            return serializers.ValidationError("Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
+            raise serializers.ValidationError("Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
 
     def create(self, validated_data):
         return Todo.objects.create(**validated_data)
