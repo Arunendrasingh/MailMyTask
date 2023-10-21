@@ -25,5 +25,3 @@ class TaskPriority(models.Model):
     def __str__(self) -> str:
         return self.title
 
-
-# TODO: Fix AttributeError: 'datetime.timedelta' object has no attribute 'day' error in Code By Tomorrow.

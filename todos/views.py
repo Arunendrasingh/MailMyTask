@@ -143,9 +143,3 @@ class GetUpdateDeleteTaskPriority(APIView):
         todo_to_delete.delete()
 
         return Response({"hasError": False, "messages": f"Task Priority with id: {id} is deleted."}, status=status.HTTP_200_OK)
-
-
-# TODO: test Update and delete method's priority .d
-
-
-# Creating a new EndPoint to assign priority tag.

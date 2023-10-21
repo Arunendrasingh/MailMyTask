@@ -10,11 +10,25 @@ from datetime import datetime, timezone
 def convert_django_time_in_datetime(str_time: str):
     return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
 
+class TaskPrioritySerializer(serializers.ModelSerializer):
+
+    weight = serializers.IntegerField(validators=[UniqueValidator(
+        queryset=TaskPriority.objects.all(), message="Weight should be Unique.")])
+
+    title = serializers.CharField(validators=[UniqueValidator(
+        queryset=TaskPriority.objects.all(), message="TaskPriority should be unique.")])
+
+    class Meta:
+        model = TaskPriority
+        fields = '__all__'
+
 
 class TodoSerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(validators=[UniqueValidator(
         queryset=Todo.objects.all(), message="Title should be Unique.")])
+    
+    task_priority = TaskPrioritySerializer(read_only=True)
     
     class Meta:
         model = Todo
@@ -56,14 +70,3 @@ class TodoSerializer(serializers.ModelSerializer):
                 "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
 
 
-class TaskPrioritySerializer(serializers.ModelSerializer):
-
-    weight = serializers.IntegerField(validators=[UniqueValidator(
-        queryset=TaskPriority.objects.all(), message="Weight should be Unique.")])
-
-    title = serializers.CharField(validators=[UniqueValidator(
-        queryset=TaskPriority.objects.all(), message="TaskPriority should be unique.")])
-
-    class Meta:
-        model = TaskPriority
-        fields = '__all__'
