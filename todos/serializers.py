@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from todos.models import TaskPriority, Todo
 
 from datetime import datetime, timezone
@@ -11,28 +11,24 @@ def convert_django_time_in_datetime(str_time: str):
     return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
 
 class TaskPrioritySerializer(serializers.ModelSerializer):
-
-    weight = serializers.IntegerField(validators=[UniqueValidator(
-        queryset=TaskPriority.objects.all(), message="Weight should be Unique.")])
-
-    title = serializers.CharField(validators=[UniqueValidator(
-        queryset=TaskPriority.objects.all(), message="TaskPriority should be unique.")])
-
     class Meta:
         model = TaskPriority
         fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["title", "user"])
+        ]
 
 
 class TodoSerializer(serializers.ModelSerializer):
-
-    title = serializers.CharField(validators=[UniqueValidator(
-        queryset=Todo.objects.all(), message="Title should be Unique.")])
-    
     task_priority = TaskPrioritySerializer(read_only=True)
     
     class Meta:
         model = Todo
         fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(queryset=Todo.objects.all(), fields=["title", "user"])
+        ]
+
 
     def validate_task_priority(self, value):
         # get the existence of value in Priority table
