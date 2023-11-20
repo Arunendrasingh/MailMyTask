@@ -76,7 +76,10 @@ class GetUpdateDeleteTodo(APIView):
 
 
 class ListCreateTaskPriority(APIView):
+    """This class is used to create a task Priority or to get a list of task priority."""
+
     def post(self, request):
+        """This method get a post request and create a new task priority if not already created."""
         # Now add code to get the value from request.
         task_priority_serializer = TaskPrioritySerializer(data=request.data)
 
@@ -95,6 +98,7 @@ class ListCreateTaskPriority(APIView):
         })
 
     def get(self, request):
+        """this method accept a get request and return a list of taskpriority"""
         task_priority = TaskPriority.objects.all()
         task_priority_serializer = TaskPrioritySerializer(
             task_priority, many=True)
@@ -114,16 +118,16 @@ class ListCreateTaskPriority(APIView):
 
 
 class GetUpdateDeleteTaskPriority(APIView):
-    def get(self, request, id):
-        todo = TaskPriority.objects.filter(id=id).first()
+    def get(self, request, task_priority_id):
+        todo = TaskPriority.objects.filter(id=task_priority_id).first()
         if not todo:
             return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TaskPrioritySerializer(todo)
         return Response({"hasError": False, "errors": None, "resultObject": serializer.data}, status=status.HTTP_200_OK)
 
-    def put(self, request, id):
-        todo = TaskPriority.objects.filter(id=id).first()
+    def put(self, request, task_priority_id):
+        todo = TaskPriority.objects.filter(id=task_priority_id).first()
         if not todo:
             return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
 
