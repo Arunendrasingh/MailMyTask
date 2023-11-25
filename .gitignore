@@ -28,3 +28,7 @@ migrations/
 .idea
 
 
+# Excel files.
+*.xlsx
+
+

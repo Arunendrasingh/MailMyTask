@@ -15,7 +15,8 @@ class TaskPrioritySerializer(serializers.ModelSerializer):
         model = TaskPriority
         fields = '__all__'
         validators = [
-            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["title", "user"])
+            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["title", "user"]),
+            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["weight", "user"]),
         ]
 
 
