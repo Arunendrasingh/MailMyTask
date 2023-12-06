@@ -7,8 +7,6 @@ from .models import TaskPriority, Todo
 
 # Create your views here.
 
-# TODO: Add logger in python to log all request and request and response to validate any error and anything. do it after completing  this project.
-
 
 class ListCreateTodo(APIView):
     """

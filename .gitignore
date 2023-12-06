@@ -31,4 +31,7 @@ migrations/
 # Excel files.
 *.xlsx
 
+# Logs
+*.log
+
 
