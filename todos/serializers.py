@@ -10,26 +10,29 @@ from datetime import datetime, timezone
 def convert_django_time_in_datetime(str_time: str):
     return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
 
+
 class TaskPrioritySerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskPriority
         fields = '__all__'
         validators = [
-            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["title", "user"]),
-            UniqueTogetherValidator(queryset=TaskPriority.objects.all(), fields=["weight", "user"]),
+            UniqueTogetherValidator(
+                queryset=TaskPriority.objects.all(), fields=["title", "user"]),
+            UniqueTogetherValidator(
+                queryset=TaskPriority.objects.all(), fields=["weight", "user"]),
         ]
 
 
 class TodoSerializer(serializers.ModelSerializer):
     task_priority = TaskPrioritySerializer(read_only=True)
-    
+
     class Meta:
         model = Todo
         fields = '__all__'
         validators = [
-            UniqueTogetherValidator(queryset=Todo.objects.all(), fields=["title", "user"])
+            UniqueTogetherValidator(
+                queryset=Todo.objects.all(), fields=["title", "user"])
         ]
-
 
     def validate_task_priority(self, value):
         # get the existence of value in Priority table
@@ -65,5 +68,3 @@ class TodoSerializer(serializers.ModelSerializer):
         except ValueError:
             raise serializers.ValidationError(
                 "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
-
-

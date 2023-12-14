@@ -1,3 +1,4 @@
+import logging
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -7,6 +8,8 @@ from .models import TaskPriority, Todo
 
 # Create your views here.
 
+# logger
+logger = logging.getLogger("django")
 
 class ListCreateTodo(APIView):
     """
@@ -21,7 +24,9 @@ class ListCreateTodo(APIView):
         serializer = TodoSerializer(todos, many=True)
 
         if not todos:
+            logger.warning("No Todo object present.")
             return Response({"value": [], "error": True, "status": "No todo is available "})
+        logger.info("Returning List of todo.")
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -29,11 +34,13 @@ class ListCreateTodo(APIView):
         this method create new todo in db.
 
         """
+        logger.info("Creating new Todo")
         todo_serializer = TodoSerializer(data=request.data)
         if todo_serializer.is_valid(raise_exception=True):
             todo_serializer.save()
             return Response(todo_serializer.data, status=status.HTTP_201_CREATED)
 
+        logger.warning(f"Failed to create Todo due to error: {todo_serializer.errors}")
         return Response({"hasError": True, "errors": todo_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -45,7 +52,7 @@ class GetUpdateDeleteTodo(APIView):
     def get(self, request, id):
         todo = Todo.objects.filter(id=id).first()
         if not todo:
-            return Response({"hasError": True, "errors": "Requested object is not in found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"hasError": True, "errors": "Requested object is not found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TodoSerializer(todo)
         return Response({"hasError": False, "value": serializer.data}, status=status.HTTP_200_OK)
@@ -53,7 +60,7 @@ class GetUpdateDeleteTodo(APIView):
     def put(self, request, id):
         todo = Todo.objects.filter(id=id).first()
         if not todo:
-            return Response({"hasError": True, "errors": "Requested object is not in found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"hasError": True, "errors": "Requested object is not found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TodoSerializer(
             instance=todo, data=request.data, partial=True)
