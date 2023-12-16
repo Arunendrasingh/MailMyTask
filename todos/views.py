@@ -2,6 +2,7 @@ import logging
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from todos.serializers import TaskPrioritySerializer, TodoSerializer
 from .models import TaskPriority, Todo
@@ -11,17 +12,22 @@ from .models import TaskPriority, Todo
 # logger
 logger = logging.getLogger("django")
 
+
 class ListCreateTodo(APIView):
     """
     This View create a new todo in db on Post request and return list of todo's for Get request.
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """
         Return a list of all todos.
         """
+        # Printing auth and user
         todos = Todo.objects.all()
-        serializer = TodoSerializer(todos, many=True)
+        serializer = TodoSerializer(
+            todos, many=True, context={"request": request})
 
         if not todos:
             logger.warning("No Todo object present.")
@@ -35,12 +41,14 @@ class ListCreateTodo(APIView):
 
         """
         logger.info("Creating new Todo")
-        todo_serializer = TodoSerializer(data=request.data)
+        todo_serializer = TodoSerializer(
+            data=request.data, context={"request": request})
         if todo_serializer.is_valid(raise_exception=True):
-            todo_serializer.save()
+            todo_serializer.save(user_id=request.user.id)
             return Response(todo_serializer.data, status=status.HTTP_201_CREATED)
 
-        logger.warning(f"Failed to create Todo due to error: {todo_serializer.errors}")
+        logger.warning(
+            f"Failed to create Todo due to error: {todo_serializer.errors}")
         return Response({"hasError": True, "errors": todo_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -49,12 +57,14 @@ class GetUpdateDeleteTodo(APIView):
     This views use to retrieve  a single todo with id, and it will be also used to update and delete a todo with id
     """
 
+    permission_classes = (IsAuthenticated, )
+
     def get(self, request, id):
         todo = Todo.objects.filter(id=id).first()
         if not todo:
             return Response({"hasError": True, "errors": "Requested object is not found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = TodoSerializer(todo)
+        serializer = TodoSerializer(todo, context={"request": request})
         return Response({"hasError": False, "value": serializer.data}, status=status.HTTP_200_OK)
 
     def put(self, request, id):
@@ -63,7 +73,7 @@ class GetUpdateDeleteTodo(APIView):
             return Response({"hasError": True, "errors": "Requested object is not found.", "value": []}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TodoSerializer(
-            instance=todo, data=request.data, partial=True)
+            instance=todo, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -83,10 +93,13 @@ class GetUpdateDeleteTodo(APIView):
 class ListCreateTaskPriority(APIView):
     """This class is used to create a task Priority or to get a list of task priority."""
 
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         """This method get a post request and create a new task priority if not already created."""
         # Now add code to get the value from request.
-        task_priority_serializer = TaskPrioritySerializer(data=request.data)
+        task_priority_serializer = TaskPrioritySerializer(
+            data=request.data, context={"request": request})
 
         if task_priority_serializer.is_valid(raise_exception=True):
             task_priority_serializer.save()
@@ -106,7 +119,7 @@ class ListCreateTaskPriority(APIView):
         """this method accept a get request and return a list of taskpriority"""
         task_priority = TaskPriority.objects.all()
         task_priority_serializer = TaskPrioritySerializer(
-            task_priority, many=True)
+            task_priority, many=True, context={"request": request})
 
         if not task_priority_serializer:
             return Response({
@@ -123,12 +136,15 @@ class ListCreateTaskPriority(APIView):
 
 
 class GetUpdateDeleteTaskPriority(APIView):
+
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, task_priority_id):
         todo = TaskPriority.objects.filter(id=task_priority_id).first()
         if not todo:
             return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = TaskPrioritySerializer(todo)
+        serializer = TaskPrioritySerializer(todo,context={"request": request})
         return Response({"hasError": False, "errors": None, "resultObject": serializer.data}, status=status.HTTP_200_OK)
 
     def put(self, request, task_priority_id):
@@ -137,7 +153,7 @@ class GetUpdateDeleteTaskPriority(APIView):
             return Response({"hasError": True, "errors": "Requested object is not in found.", "resultObject": {}}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TaskPrioritySerializer(
-            instance=todo, data=request.data, partial=True)
+            instance=todo, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response({"hasError": False, "errors": serializer.errors, "resultObject": serializer.data}, status=status.HTTP_200_OK)
