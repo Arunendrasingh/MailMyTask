@@ -3,8 +3,12 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from MailMyTask.custom_response import CustomResponse
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import DjangoModelPermissions
+from rest_framework.renderers import BrowsableAPIRenderer
 
 from todos.serializers import TaskPrioritySerializer, TodoSerializer
+from MailMyTask.custom_renderer import CustomRenderer
 from .models import TaskPriority, Todo
 
 # Create your views here.
@@ -91,46 +95,53 @@ class GetUpdateDeleteTodo(APIView):
         return CustomResponse(has_error=False, data=f"Task with id: {id} is deleted.", status=status.HTTP_200_OK)
 
 
-class ListCreateTaskPriority(APIView):
+class ListCreateTaskPriority(ListCreateAPIView):
     """This class is used to create a task Priority or to get a list of task priority."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = TaskPriority.objects.all()
+    serializer_class = TaskPrioritySerializer
 
-    def post(self, request):
-        """This method get a post request and create a new task priority if not already created."""
-        # Now add code to get the value from request.
-        task_priority_serializer = TaskPrioritySerializer(
-            data=request.data, context={"request": request})
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
-        if task_priority_serializer.is_valid(raise_exception=True):
-            task_priority_serializer.save(user_id=request.user.id)
-            return CustomResponse(
-                has_error=False,
-                data=task_priority_serializer.data, status=status.HTTP_201_CREATED)
 
-        return CustomResponse(
-            has_error=True,
-            errors=task_priority_serializer.errors,
-            data=None
-        )
+    # def post(self, request):
+    #     """This method get a post request and create a new task priority if not already created."""
+    #     # Now add code to get the value from request.
+    #     task_priority_serializer = TaskPrioritySerializer(
+    #         data=request.data, context={"request": request})
 
-    def get(self, request):
-        """this method accept a get request and return a list of taskpriority"""
-        task_priority = TaskPriority.objects.all()
-        task_priority_serializer = TaskPrioritySerializer(
-            task_priority, many=True, context={"request": request})
+    #     if task_priority_serializer.is_valid(raise_exception=True):
+    #         task_priority_serializer.save(user_id=request.user.id)
+    #         return CustomResponse(
+    #             has_error=False,
+    #             data=task_priority_serializer.data, status=status.HTTP_201_CREATED)
 
-        if not task_priority_serializer:
-            return CustomResponse(
-                has_error=True,
-                errors=task_priority_serializer.errors
-            )
+    #     return CustomResponse(
+    #         has_error=True,
+    #         errors=task_priority_serializer.errors,
+    #         data=None
+    #     )
 
-        return CustomResponse(
-            has_error=False,
-            errors="",
-            data=task_priority_serializer.data
-        )
+    # def get(self, request):
+    #     """this method accept a get request and return a list of taskpriority"""
+    #     task_priority = TaskPriority.objects.all()
+    #     task_priority_serializer = TaskPrioritySerializer(
+    #         task_priority, many=True, context={"request": request})
+
+    #     if not task_priority_serializer:
+    #         return CustomResponse(
+    #             has_error=True,
+    #             errors=task_priority_serializer.errors
+    #         )
+
+    #     return CustomResponse(
+    #         has_error=False,
+    #         errors="",
+    #         data=task_priority_serializer.data
+    #     )
 
 
 class GetUpdateDeleteTaskPriority(APIView):
