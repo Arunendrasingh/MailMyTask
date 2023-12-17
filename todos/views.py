@@ -102,7 +102,7 @@ class ListCreateTaskPriority(APIView):
             data=request.data, context={"request": request})
 
         if task_priority_serializer.is_valid(raise_exception=True):
-            task_priority_serializer.save()
+            task_priority_serializer.save(user_id = request.user.id)
             return Response({
                 "hasError": False,
                 "errors": "",

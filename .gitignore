@@ -35,3 +35,6 @@ migrations/
 *.log
 
 
+# Rest Client files
+Rest Client/
+
