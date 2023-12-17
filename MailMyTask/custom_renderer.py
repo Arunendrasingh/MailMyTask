@@ -14,4 +14,6 @@ class CustomRenderer(JSONRenderer):
             res_data["hasError"] = True
             res_data["errors"] = data
 
+        print("Data while deleting: ", data)
+
         return super().render(res_data, accepted_media_type, renderer_context)

@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from MailMyTask.custom_response import CustomResponse
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
 
@@ -107,76 +107,9 @@ class ListCreateTaskPriority(ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-    # def post(self, request):
-    #     """This method get a post request and create a new task priority if not already created."""
-    #     # Now add code to get the value from request.
-    #     task_priority_serializer = TaskPrioritySerializer(
-    #         data=request.data, context={"request": request})
+class GetUpdateDeleteTaskPriority(RetrieveUpdateDestroyAPIView):
 
-    #     if task_priority_serializer.is_valid(raise_exception=True):
-    #         task_priority_serializer.save(user_id=request.user.id)
-    #         return CustomResponse(
-    #             has_error=False,
-    #             data=task_priority_serializer.data, status=status.HTTP_201_CREATED)
-
-    #     return CustomResponse(
-    #         has_error=True,
-    #         errors=task_priority_serializer.errors,
-    #         data=None
-    #     )
-
-    # def get(self, request):
-    #     """this method accept a get request and return a list of taskpriority"""
-    #     task_priority = TaskPriority.objects.all()
-    #     task_priority_serializer = TaskPrioritySerializer(
-    #         task_priority, many=True, context={"request": request})
-
-    #     if not task_priority_serializer:
-    #         return CustomResponse(
-    #             has_error=True,
-    #             errors=task_priority_serializer.errors
-    #         )
-
-    #     return CustomResponse(
-    #         has_error=False,
-    #         errors="",
-    #         data=task_priority_serializer.data
-    #     )
-
-
-class GetUpdateDeleteTaskPriority(APIView):
-
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, task_priority_id):
-        todo = TaskPriority.objects.filter(
-            id=task_priority_id, user=request.user).first()
-        if not todo:
-            return CustomResponse(has_error=True, errors="Unable to find Requested object.", data={}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = TaskPrioritySerializer(todo, context={"request": request})
-        return CustomResponse(has_error=False, errors=None, data=serializer.data, status=status.HTTP_200_OK)
-
-    def put(self, request, task_priority_id):
-        todo = TaskPriority.objects.filter(
-            id=task_priority_id, user=request.user).first()
-        if not todo:
-            return CustomResponse(has_error=True, errors="Requested object is not in found.", data={}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = TaskPrioritySerializer(
-            instance=todo, data=request.data, partial=True, context={"request": request})
-        if serializer.is_valid():
-            serializer.save()
-            return CustomResponse(has_error=False, errors=serializer.errors, data=serializer.data, status=status.HTTP_200_OK)
-
-        return CustomResponse(has_error=True, errors=serializer.errors, data={}, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, id):
-        todo_to_delete = TaskPriority.objects.filter(
-            id=id, user=request.user).first()
-        if not todo_to_delete:
-            return CustomResponse(has_error=True, errors=f"No TaskPriority to delete with id: {id}", data=None, status=status.HTTP_404_NOT_FOUND)
-
-        todo_to_delete.delete()
-
-        return CustomResponse(has_error=False, data=f"Task Priority with id: {id} is deleted.", status=status.HTTP_200_OK)
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = TaskPriority.objects.all()
+    serializer_class = TaskPrioritySerializer
