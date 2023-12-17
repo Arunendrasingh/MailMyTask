@@ -28,3 +28,13 @@ migrations/
 .idea
 
 
+# Excel files.
+*.xlsx
+
+# Logs
+*.log
+
+
+# Rest Client files
+Rest Client/
+

@@ -5,5 +5,5 @@ urlpatterns = [
     path("todos/", view=views.ListCreateTodo.as_view()),
     path("todos/<int:id>", views.GetUpdateDeleteTodo.as_view()),
     path("task_priority/", view=views.ListCreateTaskPriority.as_view()),
-    path("task_priority/<int:id>", view=views.GetUpdateDeleteTaskPriority.as_view()),
+    path("task_priority/<int:pk>", view=views.GetUpdateDeleteTaskPriority.as_view()),
 ]
