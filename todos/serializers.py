@@ -1,0 +1,85 @@
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
+from todos.models import TaskPriority, Todo
+
+from datetime import datetime, timezone
+
+# Your serializer
+
+
+def convert_django_time_in_datetime(str_time: str):
+    return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+class TaskPrioritySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskPriority
+        exclude = ["user"]
+        
+    def validate_title(self, value):
+        request = self.context["request"]
+
+        if TaskPriority.objects.filter(user=request.user, title=value).exists():
+            raise serializers.ValidationError(
+                f"A Task priority with title '{value}' is already present.")
+
+        return value
+
+    def validate_weight(self, value):
+        request = self.context["request"]
+
+        if TaskPriority.objects.filter(user=request.user, weight=value).exists():
+            raise serializers.ValidationError(
+                f"A Task priority with weight '{value}' is already present.")
+
+        return value
+
+
+class TodoSerializer(serializers.ModelSerializer):
+    task_priority = TaskPrioritySerializer(read_only=True)
+    owner = serializers.CharField(source="user", read_only=True)
+
+    class Meta:
+        model = Todo
+        fields = ["id", "title", "description", "reminder", "reminder_before_time",
+                  "completion_time",  "task_priority", "priority", "owner", "updated_at", "created_At"]
+
+    def validate_task_priority(self, value):
+        # get the existence of value in Priority table
+        if not value:
+            return None
+
+        if isinstance(value, TaskPriority):
+            value = value.id
+
+        priority = TaskPriority.objects.filter(id=value).first()
+        if priority:
+            return priority
+
+        raise serializers.ValidationError(
+            "Unable to find validation with key: ", value)
+
+    def validate_title(self, value):
+        if Todo.objects.filter(title__iexact=value, user=self.context["request"].user).exists():
+            raise serializers.ValidationError(
+                f"A Task with title '{value}' is already exists.")
+
+        return value
+
+    def validate_completion_time(self, value):
+        try:
+            current_time = datetime.now(timezone.utc)
+
+            time_diff = value - current_time
+
+            if time_diff.days == 0 and time_diff.seconds == 0:
+                return serializers.ValidationError("Todo time must be greater than current time.")
+
+            if time_diff.days >= 0 and time_diff.seconds >= 0:
+                return value
+
+            raise serializers.ValidationError(
+                "Todo time must be greater than current time.")
+        except ValueError:
+            raise serializers.ValidationError(
+                "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")

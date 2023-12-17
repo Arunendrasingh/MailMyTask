@@ -1,0 +1,40 @@
+# Database files
+db.sqlite3
+
+# Python cache 
+__pycache__/
+
+# Django Migrations
+migrations/
+
+# Virtualenvs
+.venv
+
+
+# Database config and Env files
+*.cnf
+
+
+# Vs Code configuration.
+.vscode/
+
+
+# Jupyter files
+*.ipynb
+
+*.json
+
+# Pycharm folder
+.idea
+
+
+# Excel files.
+*.xlsx
+
+# Logs
+*.log
+
+
+# Rest Client files
+Rest Client/
+
