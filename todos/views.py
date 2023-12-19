@@ -7,9 +7,9 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
 
-from todos.serializers import TaskPrioritySerializer, TodoSerializer
+from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
-from .models import TaskPriority, Todo
+from .models import Folder, SubFolder, TaskPriority, Todo
 
 # Create your views here.
 
@@ -113,3 +113,42 @@ class GetUpdateDeleteTaskPriority(RetrieveUpdateDestroyAPIView):
     renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
     queryset = TaskPriority.objects.all()
     serializer_class = TaskPrioritySerializer
+
+
+
+# Views for Folders and SubFolder.
+    
+class ListCreateFolder(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = Folder.objects.all()
+    serializer_class = FolderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class GetUpdateDeleteFolder(RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [IsAuthenticated ]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = Folder.objects.all()
+    serializer_class = FolderSerializer
+
+
+class ListCreateSubFolder(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = SubFolder.objects.all()
+    serializer_class = SubFolderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class GetUpdateDeleteSubFolder(RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [IsAuthenticated ]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = SubFolder.objects.all()
+    serializer_class = SubFolderSerializer
