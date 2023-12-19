@@ -111,8 +111,6 @@ class SubFolderSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "description", "folder", "folder_id",
                   "owner", "updatedAt", "createdAt"]
 
-    # TODO: Add a validator for folder_id while creating, and if folder_id is not provided then do not create subfolder and raise Validation Error
-
     def validate_title(self, value):
         request = self.context["request"]
         if SubFolder.objects.filter(user=request.user, title=value).exists():
@@ -123,8 +121,7 @@ class SubFolderSerializer(serializers.ModelSerializer):
 
     def validate_folder_id(self, value):
         # get the existence of value in Priority table
-        print("Validating folder while adding the subfolder")
-
+        request = self.context["request"]
         if not value:
             raise serializers.ValidationError(
                 "ID of folder is required to Create/Update the Sub Folder")
@@ -132,9 +129,9 @@ class SubFolderSerializer(serializers.ModelSerializer):
         if isinstance(value, Folder):
             value = value.id
 
-        priority = Folder.objects.filter(id=value).first()
+        priority = Folder.objects.filter(id=value, user=request.user).first()
         if priority:
             return priority
 
         raise serializers.ValidationError(
-            "Unable to find folder with key: ", value)
+            f"Unable to find folder with key: {value}")

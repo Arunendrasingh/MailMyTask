@@ -115,9 +115,8 @@ class GetUpdateDeleteTaskPriority(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskPrioritySerializer
 
 
-
 # Views for Folders and SubFolder.
-    
+
 class ListCreateFolder(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
@@ -127,13 +126,21 @@ class ListCreateFolder(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
+
 
 class GetUpdateDeleteFolder(RetrieveUpdateDestroyAPIView):
 
-    permission_classes = [IsAuthenticated ]
+    permission_classes = [IsAuthenticated]
     renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
     queryset = Folder.objects.all()
     serializer_class = FolderSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
 
 
 class ListCreateSubFolder(ListCreateAPIView):
@@ -145,10 +152,18 @@ class ListCreateSubFolder(ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
+
 
 class GetUpdateDeleteSubFolder(RetrieveUpdateDestroyAPIView):
 
-    permission_classes = [IsAuthenticated ]
+    permission_classes = [IsAuthenticated]
     renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
     queryset = SubFolder.objects.all()
     serializer_class = SubFolderSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
