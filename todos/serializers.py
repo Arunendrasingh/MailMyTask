@@ -34,56 +34,6 @@ class TaskPrioritySerializer(serializers.ModelSerializer):
         return value
 
 
-class TodoSerializer(serializers.ModelSerializer):
-    task_priority = TaskPrioritySerializer(read_only=True)
-    owner = serializers.CharField(source="user", read_only=True)
-
-    class Meta:
-        model = Todo
-        fields = ["id", "title", "description", "reminder", "reminder_before_time",
-                  "completion_time",  "task_priority", "owner", "updatedAt", "createdAt"]
-
-    def validate_task_priority(self, value):
-        # get the existence of value in Priority table
-        if not value:
-            return None
-
-        if isinstance(value, TaskPriority):
-            value = value.id
-
-        priority = TaskPriority.objects.filter(id=value).first()
-        if priority:
-            return priority
-
-        raise serializers.ValidationError(
-            "Unable to find validation with key: ", value)
-
-    def validate_title(self, value):
-        if Todo.objects.filter(title__iexact=value, user=self.context["request"].user).exists():
-            raise serializers.ValidationError(
-                f"A Task with title '{value}' is already exists.")
-
-        return value
-
-    def validate_completion_time(self, value):
-        try:
-            current_time = datetime.now(timezone.utc)
-
-            time_diff = value - current_time
-
-            if time_diff.days == 0 and time_diff.seconds == 0:
-                return serializers.ValidationError("Todo time must be greater than current time.")
-
-            if time_diff.days >= 0 and time_diff.seconds >= 0:
-                return value
-
-            raise serializers.ValidationError(
-                "Todo time must be greater than current time.")
-        except ValueError:
-            raise serializers.ValidationError(
-                "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
-
-
 class FolderSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source="user", read_only=True)
 
@@ -99,6 +49,15 @@ class FolderSerializer(serializers.ModelSerializer):
                 f"Folder with name '{value}' already present.")
 
         return value
+
+
+class BaseSubFolderSerializer(serializers.ModelSerializer):
+    owner = serializers.CharField(source="user", read_only=True)
+
+    class Meta:
+        model = SubFolder
+        fields = ["id", "title", "description",
+                  "owner", "updatedAt", "createdAt"]
 
 
 class SubFolderSerializer(serializers.ModelSerializer):
@@ -135,3 +94,75 @@ class SubFolderSerializer(serializers.ModelSerializer):
 
         raise serializers.ValidationError(
             f"Unable to find folder with key: {value}")
+
+
+class TodoSerializer(serializers.ModelSerializer):
+    task_priority = TaskPrioritySerializer(read_only=True)
+    task_priority_id = serializers.CharField(
+        source="task_priority", write_only=True, required=False)
+    owner = serializers.CharField(source="user", read_only=True)
+    sub_folder = BaseSubFolderSerializer(read_only=True)
+    sub_folder_id = serializers.CharField(
+        source="sub_folder", write_only=True, required=False)
+
+    class Meta:
+        model = Todo
+        fields = ["id", "title", "description", "reminder", "reminder_before_time",
+                  "completion_time",  "task_priority", "task_priority_id", "owner", "sub_folder", "sub_folder_id", "updatedAt", "createdAt"]
+
+    def validate_sub_folder_id(self, value):
+        # get the existence of value in Priority table
+        if not value:
+            return None
+
+        request = self.context["request"]
+        if isinstance(value, SubFolder):
+            value = value.id
+
+        priority = SubFolder.objects.filter(
+            id=value, user=request.user).first()
+        if priority:
+            return priority
+
+        raise serializers.ValidationError(
+            f"Unable to find folder with key: {value}")
+
+    def validate_task_priority_id(self, value):
+        # get the existence of value in Priority table
+        if not value:
+            return None
+
+        if isinstance(value, TaskPriority):
+            value = value.id
+
+        priority = TaskPriority.objects.filter(id=value).first()
+        if priority:
+            return priority
+
+        raise serializers.ValidationError(
+            f"Unable to find validation with key: {value}")
+
+    def validate_title(self, value):
+        if Todo.objects.filter(title__iexact=value, user=self.context["request"].user).exists():
+            raise serializers.ValidationError(
+                f"A Task with title '{value}' is already exists.")
+
+        return value
+
+    def validate_completion_time(self, value):
+        try:
+            current_time = datetime.now(timezone.utc)
+
+            time_diff = value - current_time
+
+            if time_diff.days == 0 and time_diff.seconds == 0:
+                return serializers.ValidationError("Todo time must be greater than current time.")
+
+            if time_diff.days >= 0 and time_diff.seconds >= 0:
+                return value
+
+            raise serializers.ValidationError(
+                "Todo time must be greater than current time.")
+        except ValueError:
+            raise serializers.ValidationError(
+                "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")

@@ -34,6 +34,8 @@ class Todo(models.Model):
     task_priority = models.ForeignKey(
         "TaskPriority", null=True, on_delete=models.SET_NULL)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sub_folder = models.ForeignKey(
+        SubFolder, on_delete=models.SET_NULL, null=True)
     updatedAt = models.DateTimeField(auto_now=True)
     createdAt = models.DateTimeField(auto_now_add=True)
 
