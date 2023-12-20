@@ -29,7 +29,7 @@ class ListCreateTodo(APIView):
         Return a list of all todos.
         """
         # Printing auth and user
-        todos = Todo.objects.all()
+        todos = Todo.objects.filter(user=request.user)
         serializer = TodoSerializer(
             todos, many=True, context={"request": request})
 
