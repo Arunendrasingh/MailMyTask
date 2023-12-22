@@ -6,6 +6,7 @@ from MailMyTask.custom_response import CustomResponse
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
+from drf_spectacular.utils import extend_schema
 
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
@@ -24,6 +25,7 @@ class ListCreateTodo(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def get(self, request):
         """
         Return a list of all todos.
@@ -40,6 +42,7 @@ class ListCreateTodo(APIView):
         logger.info("Returning List of todo.")
         return CustomResponse(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def post(self, request):
         """
         this method create new todo in db.
@@ -64,6 +67,7 @@ class GetUpdateDeleteTodo(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def get(self, request, id):
         todo = Todo.objects.filter(id=id, user=request.user).first()
         if not todo:
@@ -72,6 +76,7 @@ class GetUpdateDeleteTodo(APIView):
         serializer = TodoSerializer(todo, context={"request": request})
         return CustomResponse(has_error=False, data=serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def put(self, request, id):
         todo = Todo.objects.filter(id=id, user=request.user).first()
         if not todo:

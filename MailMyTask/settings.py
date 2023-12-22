@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'rest_framework.authtoken',
     'todos.apps.TodosConfig',
 ]
@@ -110,8 +111,17 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication"
     ],
     "DEFAULT_RESPONSE_CLASS": "MailMyTask.custom_response.CustomResponse",
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Task Planner APIs Documentation',
+    'DESCRIPTION': 'Documenting Task-Planner APIs',
+    'VERSION': '1.0.0',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SERVE_INCLUDE_SCHEMA': True,
+}
 # AUTHENTICATION_BACKENDS=['users.models.EmailBackend']
 
 
