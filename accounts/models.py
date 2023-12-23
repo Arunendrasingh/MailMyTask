@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 
 # Create your models here.
 
@@ -46,7 +46,7 @@ class MyUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractBaseUser):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
         verbose_name="Email Address",
         max_length=255,
@@ -58,7 +58,7 @@ class CustomUser(AbstractBaseUser):
         verbose_name="first name", max_length=150, blank=True)
     last_name = models.CharField(
         verbose_name="last name", max_length=150, blank=True)
-    is_staff_user = models.BooleanField(
+    is_staff = models.BooleanField(
         verbose_name="staff status",
         default=False,
         help_text="Designates whether the user can log into this admin site.",
@@ -87,15 +87,10 @@ class CustomUser(AbstractBaseUser):
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
         # Simplest possible answer: Yes, always
-        return True
+        return self.is_superuser
 
     def has_module_perms(self, app_label):
         "Does the user have permissions to view the app `app_label`?"
         # Simplest possible answer: Yes, always
-        return True
+        return self.is_active and self.is_superuser
 
-    @property
-    def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
-        return self.is_superuser
