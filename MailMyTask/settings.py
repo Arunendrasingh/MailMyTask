@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework.authtoken',
     'todos.apps.TodosConfig',
+    'accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +123,9 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'SERVE_INCLUDE_SCHEMA': True,
 }
-# AUTHENTICATION_BACKENDS=['users.models.EmailBackend']
+
+
+AUTH_USER_MODEL = "accounts.CustomUser"
 
 
 # Internationalization
