@@ -90,6 +90,7 @@ class GetUpdateDeleteTodo(APIView):
 
         return CustomResponse(has_error=True, errors=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(request=None, responses=None)
     def delete(self, request, id):
         todo_to_delete = Todo.objects.filter(id=id, user=request.user).first()
         if not todo_to_delete:
