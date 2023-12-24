@@ -1,3 +1,4 @@
+import json
 from rest_framework import status
 from django.urls import include, reverse, path
 from rest_framework.test import APITestCase, URLPatternsTestCase
@@ -66,6 +67,7 @@ class UserLoginTest(APITestCase):
         User = get_user_model()
         test_user1 = User.objects.create_user(
             email="testUser1@gmail.com", contact=1234567890, password="admin@1234")
+        test_user1.is_active = True
         test_user1.save()
         test_user2 = User.objects.create_user(
             email="testUser2@gmail.com", contact=1234567890, password="admin@1234")
@@ -77,25 +79,9 @@ class UserLoginTest(APITestCase):
             "email": "testUser1@gmail.com",
             "password": "admin@1234"
         }
-        # url = reverse("auth")
-        response = self.client.post("/auth/", data=request_data)
+        url = reverse("auth")
+        response = self.client.post(url, data=request_data)
 
         self.assertEqual(response.status_code, 200)
 
-# class AccountTests(APITestCase, URLPatternsTestCase):
-#     urlpatterns = [
-#         path('', include('accounts.urls')),
-#     ]
-#
-#     def test_create_account(self):
-#         """
-#         Ensure we can create a new account object.
-#         """
-#         url = reverse('auth')
-#         request_data = {
-#             "email": "testUser1@gmail.com",
-#             "password": "admin@1234"
-#         }
-#         response = self.client.post(url, data=request_data)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(response.data), 1)
+
