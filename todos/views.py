@@ -7,6 +7,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
 from drf_spectacular.utils import extend_schema
+from django.core.mail import EmailMessage
 
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
@@ -53,7 +54,11 @@ class ListCreateTodo(APIView):
             data=request.data, context={"request": request})
         if todo_serializer.is_valid():
             todo_serializer.save(user_id=request.user.id)
+            email = EmailMessage('Successfully created Task ', str(todo_serializer.data), to=['singharunendra978@gmail.com'])
+            email.send()
+            print("----------------------------Sending emails--------------------------------------")
             return CustomResponse(todo_serializer.data, status=status.HTTP_201_CREATED)
+        
 
         logger.warning(
             f"Failed to create Todo due to error: {todo_serializer.errors}")
