@@ -18,6 +18,10 @@ migrations/
 # Vs Code configuration.
 .vscode/
 
+# Evirment files
+.env
+*.txt
+
 
 # Jupyter files
 *.ipynb
