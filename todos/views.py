@@ -1,5 +1,6 @@
 import logging
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from MailMyTask.custom_response import CustomResponse
@@ -12,11 +13,18 @@ from django.core.mail import EmailMessage
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
 from .models import Folder, SubFolder, TaskPriority, Todo
+from .task import my_task
 
 # Create your views here.
 
 # logger
 logger = logging.getLogger("django")
+
+
+@api_view(['GET'])
+def test_celery(request):
+    task_id = my_task.delay(4, 4)
+    return CustomResponse(data=f"Celery task is started with id: {task_id}")
 
 
 class ListCreateTodo(APIView):
