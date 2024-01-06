@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime, timedelta, timezone
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from MailMyTask.custom_response import CustomResponse
@@ -7,15 +9,23 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
 from drf_spectacular.utils import extend_schema
+from django.core.mail import EmailMessage
 
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
 from .models import Folder, SubFolder, TaskPriority, Todo
+from .task import my_task, send_email
 
 # Create your views here.
 
 # logger
 logger = logging.getLogger("django")
+
+
+@api_view(['GET'])
+def test_celery(request):
+    task_id = my_task.delay(4, 4)
+    return CustomResponse(data=f"Celery task is started with id: {task_id}")
 
 
 class ListCreateTodo(APIView):
@@ -45,14 +55,36 @@ class ListCreateTodo(APIView):
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def post(self, request):
         """
-        this method create new todo in db.
+        this method create new todo and add a task to send email before the scheduled time as per user's reminder detail..
 
         """
         logger.info("Creating new Todo")
         todo_serializer = TodoSerializer(
             data=request.data, context={"request": request})
+
         if todo_serializer.is_valid():
             todo_serializer.save(user_id=request.user.id)
+            # After saving a todo object create a task with async-sync to send Email in Django using time module.
+            if not todo_serializer.data.get("completion_time"):
+                return CustomResponse(todo_serializer.data, status=status.HTTP_201_CREATED)
+            
+            try:
+                date_time_obj: datetime = datetime.strptime(todo_serializer.data.get("completion_time"), "%Y-%m-%dT%H:%M:%S%z")
+                reminder_before_time = todo_serializer.data.get("reminder_before_time")
+                if not reminder_before_time:
+                    reminder_before_time = 0
+
+                reminder_time: datetime = date_time_obj - timedelta(minutes=int(reminder_before_time))
+                # reminder time should not be lower then current datetime, if it is then sent email after 10 seconds after current datetime.
+                time_diff = reminder_time - datetime.now(timezone.utc)
+                if not ((time_diff.days > 0) or (time_diff.seconds > 0) or (time_diff.minutes > 0)):
+                    reminder_time = datetime.now(timezone.utl) + timedelta(seconds=15)
+
+                # adding task in queue for celery.
+                send_email.apply_async(args=["Successfully Created Task", str(todo_serializer.data), ['singharunendra978@gmail.com']], eta=reminder_time)
+            except Exception as e:
+                logger.error(f"Process failed with Exception: {type(e).__name__}, with Exception: {e.args}")
+
             return CustomResponse(todo_serializer.data, status=status.HTTP_201_CREATED)
 
         logger.warning(
@@ -72,7 +104,6 @@ class GetUpdateDeleteTodo(APIView):
         todo = Todo.objects.filter(id=id, user=request.user).first()
         if not todo:
             return CustomResponse(has_error=True, errors="Requested object is not found.", status=status.HTTP_404_NOT_FOUND)
-
         serializer = TodoSerializer(todo, context={"request": request})
         return CustomResponse(has_error=False, data=serializer.data, status=status.HTTP_200_OK)
 
