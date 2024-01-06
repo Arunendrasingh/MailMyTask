@@ -239,13 +239,23 @@ LOGGING = {
             "filename": "./logs/django_log.log",
             "formatter": "verbose",
         },
+        "celery_task_file": {
+            "class": "logging.FileHandler",
+            "level": "INFo",
+            "filename": "./logs/celery_task.log",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "django": {
             "handlers": ["file", "console"],
             "level": "INFO",
-
+        },
+        "celery_task": {
+            "handlers": ["file", "console"],
+            "level": "INFO"
         }
+
     }
 
 }
