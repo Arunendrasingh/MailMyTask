@@ -170,6 +170,9 @@ EMAIL_HOST_USER = env('EMAIL')
 EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')
 
 
+# Celery Setup
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+
 # Simple JWT
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
@@ -179,7 +182,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": settings.SECRET_KEY,
+    "SIGNING_KEY": env("SECRET_KEY"),
     "VERIFYING_KEY": "",
     "AUDIENCE": None,
     "ISSUER": None,
@@ -236,13 +239,23 @@ LOGGING = {
             "filename": "./logs/django_log.log",
             "formatter": "verbose",
         },
+        "celery_task_file": {
+            "class": "logging.FileHandler",
+            "level": "INFo",
+            "filename": "./logs/celery_task.log",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "django": {
             "handlers": ["file", "console"],
             "level": "INFO",
-
+        },
+        "celery_task": {
+            "handlers": ["file", "console"],
+            "level": "INFO"
         }
+
     }
 
 }

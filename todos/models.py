@@ -30,9 +30,9 @@ class SubFolder(models.Model):
 class Todo(models.Model):
     title = models.CharField(max_length=90)
     description = models.TextField(blank=True)
-    completion_time = models.DateTimeField()
+    completion_time = models.DateTimeField(null=True)
     reminder = models.BooleanField(default=False)
-    reminder_before_time = models.IntegerField()
+    reminder_before_time = models.IntegerField(null=True)
     task_priority = models.ForeignKey(
         "TaskPriority", null=True, on_delete=models.SET_NULL)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
