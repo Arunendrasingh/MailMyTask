@@ -241,7 +241,7 @@ LOGGING = {
         },
         "celery_task_file": {
             "class": "logging.FileHandler",
-            "level": "INFo",
+            "level": "INFO",
             "filename": "./logs/celery_task.log",
             "formatter": "verbose",
         },

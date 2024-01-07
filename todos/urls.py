@@ -2,7 +2,6 @@ from django.urls import path, include
 from todos import views
 
 urlpatterns = [
-    path("test/", view=views.test_celery),
     path("todos/", view=views.ListCreateTodo.as_view()),
     path("todos/<int:id>", views.GetUpdateDeleteTodo.as_view()),
     path("task_priority/", view=views.ListCreateTaskPriority.as_view()),
