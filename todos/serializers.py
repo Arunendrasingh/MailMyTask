@@ -149,7 +149,7 @@ class TodoSerializer(serializers.ModelSerializer):
 
         return value
 
-    def validate_completion_time(self, value):
+    def validate_completion_time(self, value: datetime):
         try:
             current_time = datetime.now(timezone.utc)
 
@@ -165,4 +165,4 @@ class TodoSerializer(serializers.ModelSerializer):
                 "Todo time must be greater than current time.")
         except ValueError:
             raise serializers.ValidationError(
-                "Please provide correct date-time format. accepted format is: '%Y-%m-%dT%H:%M:%S.%fZ'")
+                "Please provide correct date-time format. accepted format is: 'YYYY-mm-ddTHH:MM:SS.00Z'")

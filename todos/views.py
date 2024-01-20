@@ -45,14 +45,16 @@ class ListCreateTodo(APIView):
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def post(self, request):
         """
-        this method create new todo in db.
+        this method create new todo and add a task to send email before the scheduled time as per user's reminder detail..
 
         """
         logger.info("Creating new Todo")
         todo_serializer = TodoSerializer(
             data=request.data, context={"request": request})
+
         if todo_serializer.is_valid():
-            todo_serializer.save(user_id=request.user.id)
+            todo_obj: Todo = todo_serializer.save(user_id=request.user.id)
+            todo_obj.schedule_email()
             return CustomResponse(todo_serializer.data, status=status.HTTP_201_CREATED)
 
         logger.warning(
@@ -72,7 +74,6 @@ class GetUpdateDeleteTodo(APIView):
         todo = Todo.objects.filter(id=id, user=request.user).first()
         if not todo:
             return CustomResponse(has_error=True, errors="Requested object is not found.", status=status.HTTP_404_NOT_FOUND)
-
         serializer = TodoSerializer(todo, context={"request": request})
         return CustomResponse(has_error=False, data=serializer.data, status=status.HTTP_200_OK)
 
@@ -85,11 +86,14 @@ class GetUpdateDeleteTodo(APIView):
         serializer = TodoSerializer(
             instance=todo, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
+            todo_obj: Todo = serializer.save()
+            # Rescheduling the email by revoking existing task.
+            todo_obj.update_schedule_email()
             return CustomResponse(serializer.data, has_error=False)
 
         return CustomResponse(has_error=True, errors=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(request=None, responses=None)
     def delete(self, request, id):
         todo_to_delete = Todo.objects.filter(id=id, user=request.user).first()
         if not todo_to_delete:

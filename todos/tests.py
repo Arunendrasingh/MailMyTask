@@ -1,130 +1,155 @@
+import json
+import logging
 from rest_framework.test import APITestCase
-import logging, json
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 
-logger = logging.getLogger("django")
 
 # Create your tests here.
+logger = logging.getLogger("django")
 
 
 class TaskPriorityViewsTest(APITestCase):
 
+    test_user_1 = "test_user1@gmail.com"
+    test_user_2 = "test_user2@gmail.com"
+    test_user_3 = "test_user3@gmail.com"
+    test_user_4 = "test_user4@gmail.com"
+    test_password = "admin@1234"
+    task_priority_url = "/task_priority/"
+
     # Creating a class fixture to add user in Test DB
+
     @classmethod
     def setUpClass(cls) -> None:
-        # Adding Two user with name testUser1 and testUser2 before running test in this class.
-        User = get_user_model()
-        test_user1 = User.objects.create(
-            email="testUser1@gmail.com", contact=1234567890, password="admin@1234")
+        """Register 4 User. 3 as SuperAdmin and Staff and one as regular user to test Task Priority."""
+        test_user1 = get_user_model().objects.create_superuser(contact=1234567890,
+                                                               email=cls.test_user_1, password=cls.test_password)
         test_user1.save()
-        test_user2 = User.objects.create(
-            email="testUser2@gmail.com", contact=1234567890, password="admin@1234")
+
+        test_user2 = get_user_model().objects.create_superuser(contact=1234567890,
+                                                               email=cls.test_user_2, password=cls.test_password)
         test_user2.save()
+
+        test_user3 = get_user_model().objects.create_superuser(contact=1234567890,
+                                                               email=cls.test_user_3, password=cls.test_password)
+        test_user3.save()
+
+        test_user4 = get_user_model().objects.create_user(contact=1234567890,
+                                                          email=cls.test_user_4, password=cls.test_password)
+        test_user4.is_active = True
+        test_user4.save()
         return super().setUpClass()
 
-    def test_login(self):
+    def get_auth_token(self, email: str, password: str):
+        auth_url = reverse("auth")
+        # Authenticate with test_user_1
+        response = self.client.post(
+            auth_url, data={"email": email, "password": password})
+
+        self.assertEqual(response.status_code, 200)
+        return response.json()["access"]
+
+    def test_empty_task_priority(self):
+        access_token = self.get_auth_token(
+            self.test_user_1, self.test_password)
+
+        response = self.client.get(self.task_priority_url, headers={
+                                   'Content-Type': 'application/json', 'Authorization': f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(type(response.json()["resultObject"]), list)
+        self.assertEqual(response.json()["resultObject"], [])
+
+    def test_task_priority_with_same_title_and_priority_with_same_user(self):
+        """Create two task-priority with test_user_1 with same title. second task-priority must not be created as a task-priority is already available with same title and priority."""
+
+        access_token = self.get_auth_token(
+            self.test_user_1, self.test_password)
+
         request_data = {
-            "username": "testUser1@gmail.com",
-            "password": "admin@1234"
+            "title": "Priority 1",
+            "weight": 1,
+            "color": "Orange"
         }
-        auth_response = self.client.post(
-            "/auth/", data=json.dumps(request_data), content_type="application/json")
+        # Use client to test the Test case. first create a taskpriority with testUser1 and again try to create a task priority with same name for same user and this time code must have to return False.
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 201)
+        logger.warning(f"Response is: {response.json()}-at line 77")
 
-        logger.warning(auth_response.json())
+        # New Task Priority with same request_data
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 400)
+        self.assertNotEqual(response.status_code, 201)
+        logger.warning(f"Response is: {response.json()} - at line 84")
 
-        self.assertEqual(auth_response.status_code, 200,
-                         "Failed to authenticate!!")
+    def test_task_priority_with_different_title_and_priority_with_same_user(self):
+        """Create a Task priority and after that again create a task priority with same data, and this time API must have to return bad request."""
 
-    # def test_empty_task_priority(self):
-    #     # First login using a user and then get the task Priority detail.
-    #     auth_response = self.client.post("/auth", data={"email"})
-    #     response = self.client.get("/task_priority/")
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(type(response.json()["resultObject"]), list)
-    #     self.assertEqual(response.json()["resultObject"], [])
+        access_token = self.get_auth_token(
+            self.test_user_1, self.test_password)
 
-    # def test_create_new_task_priority_testUser1(self):
-    #     """Create a task priority with testUser1"""
+        request_data = {
+            "title": "Priority 1",
+            "weight": 1,
+            "color": "Orange"
+        }
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 201)
+        logger.warning(f"Response is: {response.json()} -at line 100")
 
-    #     request_data = {
-    #         "title": "Easy-1",
-    #         "weight": 5,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     # Use client to test the Test case. first create a taskpriority with testUser1 and again try to create a task priority with same name for same user and this time code must have to return False.
-    #     response = self.client.post("/task_priority/", data=request_data)
-    #     self.assertEqual(response.status_code, 201)
-    #     # checking response
-    #     self.assertEqual(response.data, {
-    #         "hasError": False,
-    #         "errors": "",
-    #         "resultObject": {
-    #             "id": 1,
-    #             "title": "Easy-1",
-    #             "color": "Orange",
-    #             "weight": 5,
-    #             "user": 1
-    #         }
-    #     })
+        # New Task Priority with same request_data
+        request_data = {
+            "title": "Priority 2",
+            "weight": 2,
+            "color": "Orange"
+        }
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 201)
+        self.assertNotEqual(response.status_code, 400)
+        logger.warning(f"Response is: {response.json()}-- at line 112")
 
-    # def test_title_user_should_unique(self):
-    #     """Create a Task priority and after that again create a task priority with same data, and this time API must have to return bad request."""
-    #     request_data = {
-    #         "title": "Test Priority One",
-    #         "weight": 5,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     # Use client to test the Test case. first create a taskpriority with testUser1 and again try to create a task priority with same name for same user and this time code must have to return False.
-    #     response = self.client.post("/task_priority/", data=request_data)
-    #     self.assertEqual(response.status_code, 201)
+    def test_different_title_and_priority_with_diff_user(self):
+        access_token = self.get_auth_token(
+            self.test_user_1, self.test_password)
 
-    #     request_date_1 = {
-    #         "title": "Test Priority One",
-    #         "weight": 4,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     response_1 = self.client.post("/task_priority/", data=request_date_1)
-    #     self.assertNotEqual(response_1.status_code, 201)
+        request_data = {
+            "title": "Priority 1",
+            "weight": 1,
+            "color": "Orange"
+        }
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 201)
+        logger.warning(f"Response is: {response.json()} -at line 126")
 
-    # def test_title_dif_user_work(self):
-    #     request_data = {
-    #         "title": "Test Priority One",
-    #         "weight": 5,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     # Use client to test the Test case. first create a taskpriority with testUser1 and again try to create a task priority with same name for same user and this time code must have to return False.
-    #     response = self.client.post("/task_priority/", data=request_data)
-    #     self.assertEqual(response.status_code, 201)
+        # New Task Priority with same request_data
+        access_token = self.get_auth_token(
+            self.test_user_2, self.test_password)
+        request_data = {
+            "title": "Priority 1",
+            "weight": 1,
+            "color": "Orange"
+        }
+        response = self.client.post(
+            self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 201)
+        self.assertNotEqual(response.status_code, 400)
+        logger.warning(f"Response is: {response.json()}-- at line 140")
 
-    #     request_date_1 = {
-    #         "title": "Test Priority One",
-    #         "weight": 4,
-    #         "color": "Orange",
-    #         "user": 2
-    #     }
-    #     response_1 = self.client.post("/task_priority/", data=request_date_1)
-    #     self.assertEqual(response_1.status_code, 201)
 
-    # def test_weight_will_have_to_unique_with_user(self):
-    #     request_data = {
-    #         "title": "Test Priority One",
-    #         "weight": 5,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     # Use client to test the Test case. first create a taskpriority with testUser1 and again try to create a task priority with same name for same user and this time code must have to return False.
-    #     response = self.client.post("/task_priority/", data=request_data)
-    #     self.assertEqual(response.status_code, 201)
+    def test_only_admin_have_access_to_create_task_priority(self):
+        access_token = self.get_auth_token(
+            self.test_user_4, self.test_password)
+        request_data = {
+            "title": "Test Priority One",
+            "weight": 5,
+            "color": "Orange",
+        }
+        response = self.client.post(self.task_priority_url, data=request_data, headers={"Authorization": f"Bearer {access_token}"})
+        self.assertEqual(response.status_code, 403)
 
-    #     request_date_1 = {
-    #         "title": "Test Priority 2",
-    #         "weight": 5,
-    #         "color": "Orange",
-    #         "user": 1
-    #     }
-    #     response_1 = self.client.post("/task_priority/", data=request_date_1)
-    #     self.assertNotEqual(response_1.status_code, 201)
+        self.assertNotEqual(response.status_code, 201)
