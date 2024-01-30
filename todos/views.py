@@ -24,14 +24,25 @@ class ListCreateTodo(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    filter_set = ["title", "completion_time", "reminder",
+                  "sub_folder__title", "task_priority__title"]
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def get(self, request):
         """
         Return a list of all todos.
         """
+        # Query params
         # Printing auth and user
+        print("Query Parameters: ", request.query_params)
+        print("Query Parameters Title: ", request.query_params.get(
+            "title"), type(request.query_params.get("title")))
+        filter_perm = {s: request.query_params.get(
+            s) for s in self.filter_set if request.query_params.get(s)}
+        print("Filter set on Query parameter", filter_perm)
+        # Query parameters.
         todos = Todo.objects.filter(user=request.user)
+        todos = todos.filter(**filter_perm)
         serializer = TodoSerializer(
             todos, many=True, context={"request": request})
 
