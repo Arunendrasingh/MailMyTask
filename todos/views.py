@@ -7,6 +7,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
 from drf_spectacular.utils import extend_schema
+from todos.filters import TaskFilter
 
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
@@ -32,19 +33,18 @@ class ListCreateTodo(APIView):
         """
         Return a list of all todos.
         """
-        # Query params
-        # Printing auth and user
-        print("Query Parameters: ", request.query_params)
-        print("Query Parameters Title: ", request.query_params.get(
-            "title"), type(request.query_params.get("title")))
-        filter_perm = {s: request.query_params.get(
-            s) for s in self.filter_set if request.query_params.get(s)}
-        print("Filter set on Query parameter", filter_perm)
-        # Query parameters.
         todos = Todo.objects.filter(user=request.user)
-        todos = todos.filter(**filter_perm)
-        serializer = TodoSerializer(
-            todos, many=True, context={"request": request})
+
+        # filter
+        filter_set = TaskFilter(request.GET, queryset=todos)
+
+        if filter_set.is_valid():
+            todos = filter_set.qs
+            serializer = TodoSerializer(
+                todos, many=True, context={"request": request})
+        else:
+            return CustomResponse(has_error=True, errors="No Task is available.")
+
 
         if not todos:
             logger.warning("No Todo object present.")
