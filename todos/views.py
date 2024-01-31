@@ -2,12 +2,13 @@ import logging
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from MailMyTask.custom_response import CustomResponse
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.renderers import BrowsableAPIRenderer
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
+from todos.filters import TaskFilter
+from MailMyTask.custom_response import CustomResponse
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
 from .models import Folder, SubFolder, TaskPriority, Todo
@@ -24,16 +25,25 @@ class ListCreateTodo(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    filter_set = ["title", "completion_time", "reminder",
+                  "sub_folder__title", "task_priority__title"]
 
-    @extend_schema(request=TodoSerializer, responses=TodoSerializer)
+    @extend_schema(request=TodoSerializer, responses=TodoSerializer, parameters=[OpenApiParameter(name='task_priority__title', description="Task Priority Name"), OpenApiParameter(name='title', description="Task Title Name"), OpenApiParameter(name='sub_folder__title', description="Name of sub folder.")])
     def get(self, request):
         """
         Return a list of all todos.
         """
-        # Printing auth and user
         todos = Todo.objects.filter(user=request.user)
-        serializer = TodoSerializer(
-            todos, many=True, context={"request": request})
+
+        # filter
+        filter_set = TaskFilter(request.GET, queryset=todos)
+
+        if filter_set.is_valid():
+            todos = filter_set.qs
+            serializer = TodoSerializer(
+                todos, many=True, context={"request": request})
+        else:
+            return CustomResponse(has_error=True, errors="No Task is available.")
 
         if not todos:
             logger.warning("No Todo object present.")
