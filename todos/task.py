@@ -8,7 +8,6 @@ logger = logging.getLogger("celery_task")
 def my_task(arg1, arg2):
     # Task logic here
     result = arg1 + arg2
-    print(f"-----------------------------------Result: {result}-----------------------------------------")
     return result
 
 @shared_task
