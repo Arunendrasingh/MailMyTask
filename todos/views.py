@@ -11,7 +11,7 @@ from todos.filters import TaskFilter
 from MailMyTask.custom_response import CustomResponse
 from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
-from .models import Folder, SubFolder, TaskPriority, Todo
+from .models import Folder, SubFolder, TaskPriority, Task
 
 # Create your views here.
 
@@ -33,7 +33,7 @@ class ListCreateTodo(APIView):
         """
         Return a list of all todos.
         """
-        todos = Todo.objects.filter(user=request.user)
+        todos = Task.objects.filter(user=request.user)
 
         # filter
         filter_set = TaskFilter(request.GET, queryset=todos)
@@ -46,7 +46,7 @@ class ListCreateTodo(APIView):
             return CustomResponse(has_error=True, errors="No Task is available.")
 
         if not todos:
-            logger.warning("No Todo object present.")
+            logger.warning("No Task object present.")
             return CustomResponse(has_error=True, errors="No Task is available.")
 
         logger.info("Returning List of todo.")
@@ -58,17 +58,17 @@ class ListCreateTodo(APIView):
         this method create new todo and add a task to send email before the scheduled time as per user's reminder detail..
 
         """
-        logger.info("Creating new Todo")
+        logger.info("Creating new Task")
         todo_serializer = TodoSerializer(
             data=request.data, context={"request": request})
 
         if todo_serializer.is_valid():
-            todo_obj: Todo = todo_serializer.save(user_id=request.user.id)
+            todo_obj: Task = todo_serializer.save(user_id=request.user.id)
             todo_obj.schedule_email()
             return CustomResponse(todo_serializer.data, status=status.HTTP_201_CREATED)
 
         logger.warning(
-            f"Failed to create Todo due to error: {todo_serializer.errors}")
+            f"Failed to create Task due to error: {todo_serializer.errors}")
         return CustomResponse(has_error=True, errors=todo_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -81,7 +81,7 @@ class GetUpdateDeleteTodo(APIView):
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def get(self, request, id):
-        todo = Todo.objects.filter(id=id, user=request.user).first()
+        todo = Task.objects.filter(id=id, user=request.user).first()
         if not todo:
             return CustomResponse(has_error=True, errors="Requested object is not found.", status=status.HTTP_404_NOT_FOUND)
         serializer = TodoSerializer(todo, context={"request": request})
@@ -89,14 +89,14 @@ class GetUpdateDeleteTodo(APIView):
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
     def put(self, request, id):
-        todo = Todo.objects.filter(id=id, user=request.user).first()
+        todo = Task.objects.filter(id=id, user=request.user).first()
         if not todo:
             return CustomResponse(has_error=True, errors="Requested object is not found.", data=[], status=status.HTTP_404_NOT_FOUND)
 
         serializer = TodoSerializer(
             instance=todo, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
-            todo_obj: Todo = serializer.save()
+            todo_obj: Task = serializer.save()
             # Rescheduling the email by revoking existing task.
             todo_obj.update_schedule_email()
             return CustomResponse(serializer.data, has_error=False)
@@ -105,7 +105,7 @@ class GetUpdateDeleteTodo(APIView):
 
     @extend_schema(request=None, responses=None)
     def delete(self, request, id):
-        todo_to_delete = Todo.objects.filter(id=id, user=request.user).first()
+        todo_to_delete = Task.objects.filter(id=id, user=request.user).first()
         if not todo_to_delete:
             return CustomResponse(has_error=True, errors=f"No Task is present to delete with id: {id}", data=[], status=status.HTTP_404_NOT_FOUND)
 

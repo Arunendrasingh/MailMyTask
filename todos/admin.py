@@ -1,6 +1,6 @@
 from django.contrib import admin
-from todos.models import TaskPriority, Todo
+from todos.models import TaskPriority, Task
 # Register your models here.
 
-admin.site.register(Todo)
+admin.site.register(Task)
 admin.site.register(TaskPriority)

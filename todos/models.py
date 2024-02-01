@@ -10,12 +10,21 @@ from MailMyTask.celery import app
 # Logger
 logger = logging.getLogger("django")
 
+
+class Tag(models.Model):
+    title = models.CharField(max_length=120)
+    updatedAt = models.DateTimeField(auto_now=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
 class Folder(models.Model):
     title = models.CharField(max_length=90)
     description = models.TextField(blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     updatedAt = models.DateTimeField(auto_now=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
         return self.title
@@ -24,29 +33,32 @@ class Folder(models.Model):
 class SubFolder(models.Model):
     title = models.CharField(max_length=90)
     description = models.TextField(blank=True)
-    folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     updatedAt = models.DateTimeField(auto_now=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    folder = models.ForeignKey(Folder, on_delete=models.SET_NULL, null=True)
 
     def __str__(self) -> str:
         return self.title
 
 
-class Todo(models.Model):
+class Task(models.Model):
     title = models.CharField(max_length=90)
     description = models.TextField(blank=True)
     completion_time = models.DateTimeField(null=True)
     reminder = models.BooleanField(default=False)
     reminder_before_time = models.IntegerField(null=True)
     celery_task_id = models.CharField(blank=True, max_length=220)
-    task_priority = models.ForeignKey(
-        "TaskPriority", null=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    sub_folder = models.ForeignKey(
-        SubFolder, on_delete=models.SET_NULL, null=True)
     updatedAt = models.DateTimeField(auto_now=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+
+    sub_folder = models.ForeignKey(
+        SubFolder, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    task_priority = models.ForeignKey(
+        "TaskPriority", null=True, on_delete=models.SET_NULL)
+    tags = models.ManyToManyField(Tag)
 
     def update_schedule_email(self) -> None:
 
@@ -104,3 +116,8 @@ class TaskPriority(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+
+
+# Task: Add new Model 'Tags' and attach it with Task
+# Add SubQuery to get Tags using search methods and also include the tags-detail with each Task.
