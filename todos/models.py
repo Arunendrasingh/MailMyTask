@@ -18,6 +18,9 @@ class Tag(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    def __str__(self) -> str:
+        return self.title
+
 class Folder(models.Model):
     title = models.CharField(max_length=90)
     description = models.TextField(blank=True)

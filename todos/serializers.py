@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from todos.models import Folder, SubFolder, TaskPriority, Task
+from todos.models import Folder, SubFolder, Tag, TaskPriority, Task
 
 from datetime import datetime, timezone
 
@@ -8,6 +8,19 @@ from datetime import datetime, timezone
 
 def convert_django_time_in_datetime(str_time: str):
     return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+class TagSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = ["id", "title"]
+
+    def validate_title(self, value):
+        request = self.context["request"]
+        if Tag.objects.filter(user=request.user, title=value).exists():
+            raise serializers.ValidationError(
+                f"Folder with name '{value}' already present.")
 
 
 class TaskPrioritySerializer(serializers.ModelSerializer):

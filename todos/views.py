@@ -9,9 +9,9 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from todos.filters import TaskFilter
 from MailMyTask.custom_response import CustomResponse
-from todos.serializers import FolderSerializer, SubFolderSerializer, TaskPrioritySerializer, TodoSerializer
+from todos.serializers import FolderSerializer, SubFolderSerializer, TagSerializers, TaskPrioritySerializer, TodoSerializer
 from MailMyTask.custom_renderer import CustomRenderer
-from .models import Folder, SubFolder, TaskPriority, Task
+from .models import Folder, SubFolder, Tag, TaskPriority, Task
 
 # Create your views here.
 
@@ -182,6 +182,34 @@ class GetUpdateDeleteSubFolder(RetrieveUpdateDestroyAPIView):
     renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
     queryset = SubFolder.objects.all()
     serializer_class = SubFolderSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
+
+
+
+# Tags classes to add and modify 
+class ListCreateTags(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializers
+
+    def perform_create(self, serializer):
+        return serializer.save(user = self.request.user)
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(user=user)
+    
+
+class GetUpdateDeleteTags(RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [CustomRenderer, BrowsableAPIRenderer]
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializers
 
     def get_queryset(self):
         user = self.request.user
