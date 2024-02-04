@@ -50,7 +50,6 @@ class ListCreateTodo(APIView):
             return CustomResponse(has_error=True, errors="No Task is available.")
 
         logger.info("Returning List of todo.")
-        print("Serializer Data -----------------------", serializer)
         return CustomResponse(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
