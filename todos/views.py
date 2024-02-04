@@ -50,6 +50,7 @@ class ListCreateTodo(APIView):
             return CustomResponse(has_error=True, errors="No Task is available.")
 
         logger.info("Returning List of todo.")
+        print("Serializer Data -----------------------", serializer)
         return CustomResponse(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)
@@ -85,6 +86,7 @@ class GetUpdateDeleteTodo(APIView):
         if not todo:
             return CustomResponse(has_error=True, errors="Requested object is not found.", status=status.HTTP_404_NOT_FOUND)
         serializer = TodoSerializer(todo, context={"request": request})
+        print(serializer)
         return CustomResponse(has_error=False, data=serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(request=TodoSerializer, responses=TodoSerializer)

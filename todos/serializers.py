@@ -117,11 +117,12 @@ class TodoSerializer(serializers.ModelSerializer):
     sub_folder = BaseSubFolderSerializer(read_only=True)
     sub_folder_id = serializers.CharField(
         source="sub_folder", write_only=True, required=False)
+    tags = TagSerializers(read_only=True, many=True)
 
     class Meta:
         model = Task
         fields = ["id", "title", "description", "reminder", "reminder_before_time",
-                  "completion_time",  "task_priority", "task_priority_id", "owner", "sub_folder", "sub_folder_id", "updatedAt", "createdAt"]
+                  "completion_time",  "task_priority", "task_priority_id", "owner", "sub_folder", "sub_folder_id", "updatedAt", "createdAt", "tags"]
 
     def validate_sub_folder_id(self, value):
         # get the existence of value in Priority table
