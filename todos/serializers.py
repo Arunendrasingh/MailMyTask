@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from todos.models import Folder, SubFolder, TaskPriority, Todo
+from todos.models import Folder, SubFolder, Tag, TaskPriority, Task
 
 from datetime import datetime, timezone
 
@@ -8,6 +8,19 @@ from datetime import datetime, timezone
 
 def convert_django_time_in_datetime(str_time: str):
     return datetime.strptime(str_time,  "%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+class TagSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = ["id", "title"]
+
+    def validate_title(self, value):
+        request = self.context["request"]
+        if Tag.objects.filter(user=request.user, title=value).exists():
+            raise serializers.ValidationError(
+                f"Folder with name '{value}' already present.")
 
 
 class TaskPrioritySerializer(serializers.ModelSerializer):
@@ -104,11 +117,12 @@ class TodoSerializer(serializers.ModelSerializer):
     sub_folder = BaseSubFolderSerializer(read_only=True)
     sub_folder_id = serializers.CharField(
         source="sub_folder", write_only=True, required=False)
+    tags = TagSerializers(read_only=True, many=True)
 
     class Meta:
-        model = Todo
+        model = Task
         fields = ["id", "title", "description", "reminder", "reminder_before_time",
-                  "completion_time",  "task_priority", "task_priority_id", "owner", "sub_folder", "sub_folder_id", "updatedAt", "createdAt"]
+                  "completion_time",  "task_priority", "task_priority_id", "owner", "sub_folder", "sub_folder_id", "updatedAt", "createdAt", "tags"]
 
     def validate_sub_folder_id(self, value):
         # get the existence of value in Priority table
@@ -143,7 +157,7 @@ class TodoSerializer(serializers.ModelSerializer):
             f"Unable to find validation with key: {value}")
 
     def validate_title(self, value):
-        if Todo.objects.filter(title__iexact=value, user=self.context["request"].user).exists():
+        if Task.objects.filter(title__iexact=value, user=self.context["request"].user).exists():
             raise serializers.ValidationError(
                 f"A Task with title '{value}' is already exists.")
 
@@ -156,13 +170,13 @@ class TodoSerializer(serializers.ModelSerializer):
             time_diff = value - current_time
 
             if time_diff.days == 0 and time_diff.seconds == 0:
-                return serializers.ValidationError("Todo time must be greater than current time.")
+                return serializers.ValidationError("Task time must be greater than current time.")
 
             if time_diff.days >= 0 and time_diff.seconds >= 0:
                 return value
 
             raise serializers.ValidationError(
-                "Todo time must be greater than current time.")
+                "Task time must be greater than current time.")
         except ValueError:
             raise serializers.ValidationError(
                 "Please provide correct date-time format. accepted format is: 'YYYY-mm-ddTHH:MM:SS.00Z'")
